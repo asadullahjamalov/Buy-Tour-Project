@@ -78,11 +78,7 @@ public class TourTelegramBot extends TelegramWebhookBot {
 //                return sendMessage;
 //            }
         }
-        if (update.hasCallbackQuery()) {
-            chatId = update.getCallbackQuery().getFrom().getId();
-            chatIdStr = String.valueOf(chatId);
-//            return selectLanguage(update, chatId, chatIdStr);
-        }
+
         return null;
 
     }

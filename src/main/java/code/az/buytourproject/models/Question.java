@@ -18,7 +18,6 @@ public class Question {
 
     @Id
     private Long id;
-    private Long nextQuestionId;
     private String context;
     private Boolean isFirst;
     @ManyToOne
