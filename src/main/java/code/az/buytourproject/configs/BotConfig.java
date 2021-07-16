@@ -1,6 +1,6 @@
 package code.az.buytourproject.configs;
 
-import code.az.buytourproject.TourTelegramBot;
+import code.az.buytourproject.TelegramWebHook;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -16,12 +16,15 @@ public class BotConfig {
     private String botUserName;
     private String botToken;
 
+
     @Bean
-    public TourTelegramBot tourTelegramBot() {
-        TourTelegramBot telegramBot = new TourTelegramBot();
+    public TelegramWebHook tourTelegramBot() {
+        TelegramWebHook telegramBot = new TelegramWebHook();
         telegramBot.setBotToken(botToken);
         telegramBot.setWebHookPath(webHookPath);
         telegramBot.setBotUserName(botUserName);
         return telegramBot;
     }
+
+
 }

@@ -17,16 +17,16 @@ import javax.persistence.*;
 public class Operation {
     @Id
     private Long id;
+    @Enumerated(EnumType.STRING)
     private OperationType type;
-    private String text;
-    @ManyToOne
-    @JoinColumn(name = "languageId")
-    private Language language;
-    @ManyToOne
-    @JoinColumn(name = "questionId")
+    private String text_az;
+    private String text_en;
+    private String text_ru;
+    @ManyToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "question_Id")
     private Question question;
-    @ManyToOne
-    @JoinColumn(name = "nextQuestionId")
+    @ManyToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "next_question_id")
     private Question nextQuestion;
 
 

@@ -5,8 +5,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
-
 @Repository
 public interface QuestionRepo extends JpaRepository<Question, Long> {
 
@@ -14,6 +12,6 @@ public interface QuestionRepo extends JpaRepository<Question, Long> {
     Question findQuestionById(Long id);
 
     @Query("select q from Question q where q.isFirst=true")
-    List<Question> findFirstQuestion();
+    Question findFirstQuestion();
 
 }
