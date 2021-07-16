@@ -14,7 +14,7 @@ import java.util.UUID;
 public class TelegramSession {
     int chatId;
     UUID sessionId = UUID.randomUUID();
-    String language;
+    String locale;
     Map<String, String> question_answer_map = new HashMap<>();
     Operation operation;
     List<Operation> operationList;

@@ -4,6 +4,7 @@ import code.az.buytourproject.models.Operation;
 import code.az.buytourproject.models.Question;
 import code.az.buytourproject.models.TelegramSession;
 import code.az.buytourproject.repositories.OperationRepo;
+import code.az.buytourproject.services.interfaces.KeyboardService;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardButton;
@@ -13,14 +14,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Service
-public class KeyboardService {
+public class KeyboardServiceImpl implements KeyboardService {
 
     OperationRepo operationRepo;
 
-    public KeyboardService(OperationRepo operationRepo) {
+    public KeyboardServiceImpl(OperationRepo operationRepo) {
         this.operationRepo = operationRepo;
     }
 
+    @Override
     public ReplyKeyboardMarkup getKeyboardButtons(Question question, TelegramSession telegramSession) {
         ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup();
         replyKeyboardMarkup.setSelective(false);
@@ -31,11 +33,11 @@ public class KeyboardService {
         List<KeyboardRow> keyboard = new ArrayList<>();
         KeyboardRow row = new KeyboardRow();
         for (Operation operation : operations) {
-            if (telegramSession.getLanguage().equals(operationRepo.findFirstOperation().getText_az())) {
+            if (telegramSession.getLocale().equals(operationRepo.findFirstOperation().getText_az())) {
                 row.add(new KeyboardButton(operation.getText_az()));
-            } else if (telegramSession.getLanguage().equals(operationRepo.findFirstOperation().getText_en())) {
+            } else if (telegramSession.getLocale().equals(operationRepo.findFirstOperation().getText_en())) {
                 row.add(new KeyboardButton(operation.getText_en()));
-            } else if (telegramSession.getLanguage().equals(operationRepo.findFirstOperation().getText_ru())) {
+            } else if (telegramSession.getLocale().equals(operationRepo.findFirstOperation().getText_ru())) {
                 row.add(new KeyboardButton(operation.getText_ru()));
             }
         }
@@ -44,7 +46,8 @@ public class KeyboardService {
         return replyKeyboardMarkup;
     }
 
-    public ReplyKeyboardMarkup getLanguageMessageButtons() {
+    @Override
+    public ReplyKeyboardMarkup getLocaleKeyboard() {
         ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup();
         replyKeyboardMarkup.setSelective(false);
         replyKeyboardMarkup.setResizeKeyboard(true);
