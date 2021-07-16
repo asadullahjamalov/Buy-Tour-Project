@@ -1,32 +1,28 @@
 package code.az.buytourproject.components.handlers;
 
 import code.az.buytourproject.enums.OperationType;
-import code.az.buytourproject.models.Operation;
 import code.az.buytourproject.models.Question;
 import code.az.buytourproject.models.TelegramSession;
 import code.az.buytourproject.repositories.OperationRepo;
 import code.az.buytourproject.repositories.QuestionRepo;
+import code.az.buytourproject.services.KeyboardService;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardButton;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
-
-import java.util.ArrayList;
-import java.util.List;
 
 @Component
 public class MessageHandler {
     OperationRepo operationRepo;
     QuestionRepo questionRepo;
+    KeyboardService keyboardService;
 
-    public MessageHandler(OperationRepo operationRepo, QuestionRepo questionRepo) {
+    public MessageHandler(OperationRepo operationRepo, QuestionRepo questionRepo, KeyboardService keyboardService) {
         this.operationRepo = operationRepo;
         this.questionRepo = questionRepo;
+        this.keyboardService = keyboardService;
     }
-
 
     public SendMessage handleStartCommand(Update update, TelegramSession telegramSession) {
         Message message = update.getMessage();
@@ -47,7 +43,7 @@ public class MessageHandler {
             }
             return sendMessage;
         }
-        ReplyKeyboardMarkup languageButtons = getLanguageMessageButtons();
+        ReplyKeyboardMarkup languageButtons = keyboardService.getLanguageMessageButtons();
         sendMessage.setReplyMarkup(languageButtons);
         return sendMessage;
     }
@@ -65,23 +61,6 @@ public class MessageHandler {
             }
         }
         return null;
-    }
-
-    //TODO move this method to KeyboardUtil class
-    private ReplyKeyboardMarkup getLanguageMessageButtons() {
-        ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup();
-        replyKeyboardMarkup.setSelective(false);
-        replyKeyboardMarkup.setResizeKeyboard(true);
-        replyKeyboardMarkup.setOneTimeKeyboard(true);
-        Operation first_operation = operationRepo.findFirstOperation();
-        List<KeyboardRow> keyboard = new ArrayList<>();
-        KeyboardRow row = new KeyboardRow();
-        row.add(first_operation.getText_az());
-        row.add(first_operation.getText_en());
-        row.add(first_operation.getText_ru());
-        keyboard.add(row);
-        replyKeyboardMarkup.setKeyboard(keyboard);
-        return replyKeyboardMarkup;
     }
 
     public void setLanguage(Update update, TelegramSession telegramSession) {
@@ -112,83 +91,67 @@ public class MessageHandler {
             setLanguage(update, telegramSession);
         }
 
-        if (telegramSession.getLanguage().equals(operationRepo.findFirstOperation().getText_az())) {
+        if (telegramSession.getOperation().getNextQuestion().getId() != null) {
+            if (telegramSession.getLanguage().equals(operationRepo.findFirstOperation().getText_az())) {
 
-            telegramSession.getQuestion_answer_map().put(telegramSession.getOperation().getQuestion().getKey(), update.getMessage().getText());
-            System.out.println(telegramSession.getQuestion_answer_map().toString());
+                telegramSession.getQuestion_answer_map().put(telegramSession.getOperation().getQuestion().getKey(), update.getMessage().getText());
 
-            telegramSession.setQuestion(telegramSession.getOperation().getNextQuestion());
-            telegramSession.setOperation(operationRepo.getOperationsByQuestion(telegramSession.getQuestion()).get(0));
+                telegramSession.setQuestion(telegramSession.getOperation().getNextQuestion());
+                telegramSession.setOperation(operationRepo.getOperationsByQuestion(telegramSession.getQuestion()).get(0));
 
-            if (telegramSession.getOperation().getType().equals(OperationType.BUTTON)) {
-                System.out.println("button");
-                sendMessage.setReplyMarkup(getKeyboardButtons(telegramSession.getOperation().getQuestion(), telegramSession));
-            } else if (telegramSession.getOperation().getType().toString().equals("FREETEXT")) {
-                System.out.println("freetext");
+                if (telegramSession.getOperation().getType().equals(OperationType.BUTTON)) {
+
+                    System.out.println("button");
+                    sendMessage.setReplyMarkup(keyboardService.getKeyboardButtons(telegramSession.getOperation().getQuestion(), telegramSession));
+                } else if (telegramSession.getOperation().getType().equals(OperationType.FREETEXT)) {
+                    if(update.getMessage().getText().equals("TourApp təklif etsin.")){
+                        System.out.println("bbbbbbbbbbbbbbbbbbbbbbbbbb");
+                    }
+                    System.out.println("freetext");
+                }
+                return sendMessage.setChatId(update.getMessage().getChatId().toString())
+                        .setText(telegramSession.getQuestion().getQuestion_az());
+
+            } else if (telegramSession.getLanguage().equals(operationRepo.findFirstOperation().getText_en())) {
+                telegramSession.getQuestion_answer_map().put(telegramSession.getOperation().getQuestion().getKey(), update.getMessage().getText());
+                System.out.println(telegramSession.getQuestion_answer_map().toString());
+
+                telegramSession.setQuestion(telegramSession.getOperation().getNextQuestion());
+                telegramSession.setOperation(operationRepo.getOperationsByQuestion(telegramSession.getQuestion()).get(0));
+
+                if (telegramSession.getOperation().getType().equals(OperationType.BUTTON)) {
+                    System.out.println("button");
+                    sendMessage.setReplyMarkup(keyboardService.getKeyboardButtons(telegramSession.getOperation().getQuestion(), telegramSession));
+                } else if (telegramSession.getOperation().getType().toString().equals("FREETEXT")) {
+                    System.out.println("freetext");
+                }
+                return sendMessage.setChatId(update.getMessage().getChatId().toString())
+                        .setText(telegramSession.getQuestion().getQuestion_en());
+
+            } else if (telegramSession.getLanguage().equals(operationRepo.findFirstOperation().getText_ru())) {
+
+                telegramSession.getQuestion_answer_map().put(telegramSession.getOperation().getQuestion().getKey(), update.getMessage().getText());
+                System.out.println(telegramSession.getQuestion_answer_map().toString());
+
+                telegramSession.setQuestion(telegramSession.getOperation().getNextQuestion());
+                telegramSession.setOperation(operationRepo.getOperationsByQuestion(telegramSession.getQuestion()).get(0));
+
+                if (telegramSession.getOperation().getType().equals(OperationType.BUTTON)) {
+                    System.out.println("button");
+                    sendMessage.setReplyMarkup(keyboardService.getKeyboardButtons(telegramSession.getOperation().getQuestion(), telegramSession));
+                } else if (telegramSession.getOperation().getType().toString().equals("FREETEXT")) {
+                    System.out.println("freetext");
+                }
+                return sendMessage.setChatId(update.getMessage().getChatId().toString())
+                        .setText(telegramSession.getQuestion().getQuestion_ru());
             }
-            return sendMessage.setChatId(update.getMessage().getChatId().toString())
-                    .setText(telegramSession.getQuestion().getQuestion_az());
-
-        } else if (telegramSession.getLanguage().equals(operationRepo.findFirstOperation().getText_en())) {
-            telegramSession.getQuestion_answer_map().put(telegramSession.getOperation().getQuestion().getKey(), update.getMessage().getText());
-            System.out.println(telegramSession.getQuestion_answer_map().toString());
-
-            telegramSession.setQuestion(telegramSession.getOperation().getNextQuestion());
-            telegramSession.setOperation(operationRepo.getOperationsByQuestion(telegramSession.getQuestion()).get(0));
-
-            if (telegramSession.getOperation().getType().equals(OperationType.BUTTON)) {
-                System.out.println("button");
-                sendMessage.setReplyMarkup(getKeyboardButtons(telegramSession.getOperation().getQuestion(), telegramSession));
-            } else if (telegramSession.getOperation().getType().toString().equals("FREETEXT")) {
-                System.out.println("freetext");
-            }
-            return sendMessage.setChatId(update.getMessage().getChatId().toString())
-                    .setText(telegramSession.getQuestion().getQuestion_en());
-
-        } else if (telegramSession.getLanguage().equals(operationRepo.findFirstOperation().getText_ru())) {
-
-            telegramSession.getQuestion_answer_map().put(telegramSession.getOperation().getQuestion().getKey(), update.getMessage().getText());
-            System.out.println(telegramSession.getQuestion_answer_map().toString());
-
-            telegramSession.setQuestion(telegramSession.getOperation().getNextQuestion());
-            telegramSession.setOperation(operationRepo.getOperationsByQuestion(telegramSession.getQuestion()).get(0));
-
-            if (telegramSession.getOperation().getType().equals(OperationType.BUTTON)) {
-                System.out.println("button");
-                sendMessage.setReplyMarkup(getKeyboardButtons(telegramSession.getOperation().getQuestion(), telegramSession));
-            } else if (telegramSession.getOperation().getType().toString().equals("FREETEXT")) {
-                System.out.println("freetext");
-            }
-            return sendMessage.setChatId(update.getMessage().getChatId().toString())
-                    .setText(telegramSession.getQuestion().getQuestion_ru());
         }
+
 
         return sendMessage.setChatId(update.getMessage().getChatId().toString())
                 .setText("Anket basha chatdi");
+
+
     }
 
-
-
-    private ReplyKeyboardMarkup getKeyboardButtons(Question question, TelegramSession telegramSession) {
-        ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup();
-        replyKeyboardMarkup.setSelective(false);
-        replyKeyboardMarkup.setResizeKeyboard(true);
-        replyKeyboardMarkup.setOneTimeKeyboard(true);
-
-        List<Operation> operations = operationRepo.findOperationByQuestion(question);
-        List<KeyboardRow> keyboard = new ArrayList<>();
-        KeyboardRow row = new KeyboardRow();
-        for(Operation operation : operations){
-            if (telegramSession.getLanguage().equals(operationRepo.findFirstOperation().getText_az())) {
-                row.add(new KeyboardButton(operation.getText_az()));
-            } else if (telegramSession.getLanguage().equals(operationRepo.findFirstOperation().getText_en())) {
-                row.add(new KeyboardButton(operation.getText_en()));
-            } else if (telegramSession.getLanguage().equals(operationRepo.findFirstOperation().getText_ru())) {
-                row.add(new KeyboardButton(operation.getText_ru()));
-            }
-        }
-        keyboard.add(row);
-        replyKeyboardMarkup.setKeyboard(keyboard);
-        return replyKeyboardMarkup;
-    }
 }
