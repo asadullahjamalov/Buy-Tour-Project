@@ -1,6 +1,7 @@
 package code.az.buytourproject.components.handlers;
 
 import code.az.buytourproject.enums.OperationType;
+import code.az.buytourproject.models.Operation;
 import code.az.buytourproject.models.Question;
 import code.az.buytourproject.models.TelegramSession;
 import code.az.buytourproject.repositories.OperationRepo;
@@ -11,6 +12,8 @@ import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
+
+import java.util.List;
 
 @Component
 public class MessageHandler {
@@ -27,6 +30,7 @@ public class MessageHandler {
     public SendMessage handleStartCommand(Update update, TelegramSession telegramSession) {
         Message message = update.getMessage();
         long chatId = message.getChatId();
+        telegramSession.setActive(true);
         Question first_question = questionRepo.findFirstQuestion();
         String first_question_str = first_question.getQuestion_az() + "\n" + first_question.getQuestion_en() +
                 "\n" + first_question.getQuestion_ru();
@@ -51,6 +55,7 @@ public class MessageHandler {
     public SendMessage handleStopCommand(Update update, TelegramSession telegramSession) {
         if (telegramSession.getChatId() == update.getMessage().getFrom().getId()) {
             telegramSession.setChatId(0);
+            telegramSession.setActive(false);
             telegramSession.getQuestion_answer_map().clear();
             if (telegramSession.getLocale().equals(operationRepo.findFirstOperation().getText_az())) {
                 return new SendMessage(update.getMessage().getChatId().toString(), "Sessiyanı dayandırdınız. Başlamaq üçün /start əmrini yerinə yetirin. ");
@@ -59,9 +64,13 @@ public class MessageHandler {
             } else if (telegramSession.getLocale().equals(operationRepo.findFirstOperation().getText_ru())) {
                 return new SendMessage(update.getMessage().getChatId().toString(), "Вы остановили сеанс. Выполните команду /start ,чтобы начать. ");
             }
-        } else if(telegramSession.getChatId() == 0){
+        } else if (telegramSession.getChatId() == 0 && telegramSession.isActive() == false) {
             return new SendMessage(update.getMessage().getChatId().toString(), "/stop -dan əvvəl /start etməlisiniz." + "\n" +
                     "You must /start before /stop." + "\n" + "Вы должны /start до /stop .");
+
+        } else if (telegramSession.getChatId() == 0 && telegramSession.isActive() == true) {
+            return new SendMessage(update.getMessage().getChatId().toString(), "Zəhmət olmasa yenidən /start edin və dili seçin." + "\n" +
+                    "Please /start again and select a language." + "\n" + "Пожалуйста, /start еще раз и выберите язык.");
 
         }
         return null;
@@ -91,19 +100,41 @@ public class MessageHandler {
     public SendMessage handleMessage(Update update, TelegramSession telegramSession) {
         SendMessage sendMessage = new SendMessage();
 
+        if (!telegramSession.isActive())
+            return new SendMessage(update.getMessage().getChatId().toString(), "Zəhmət olmasa /start edin və dili seçin." + "\n" +
+                    "Please /start and select a language." + "\n" + "Пожалуйста, /start и выберите язык.");
+
+
         if (telegramSession.getChatId() == 0) {
             setLocale(update, telegramSession);
         }
 
-        if (telegramSession.getOperation().getNextQuestion().getId() != null) {
+        if (telegramSession.getOperation().getQuestion().getKey().equals("endMessage")) {
+            if (telegramSession.getLocale().equals(operationRepo.findFirstOperation().getText_az())) {
+                return sendMessage.setChatId(update.getMessage().getChatId().toString()).setText("Anket başa çatdı.");
+            } else if (telegramSession.getLocale().equals(operationRepo.findFirstOperation().getText_en())) {
+                return sendMessage.setChatId(update.getMessage().getChatId().toString()).setText("The survey is over.");
+            } else if (telegramSession.getLocale().equals(operationRepo.findFirstOperation().getText_ru())) {
+                return sendMessage.setChatId(update.getMessage().getChatId().toString()).setText("Опрос окончен.");
+            }
+        }
+
+
+        if (telegramSession.getOperation().getNextQuestion() != null) {
+            if (!telegramSession.getOperation().getQuestion().getKey().equals("endMessage")) {
+                telegramSession.setQuestion(telegramSession.getOperation().getNextQuestion());
+            }
+
             if (telegramSession.getLocale().equals(operationRepo.findFirstOperation().getText_az())) {
 
                 telegramSession.getQuestion_answer_map().put(telegramSession.getOperation().getQuestion().getKey(), update.getMessage().getText());
 
-                telegramSession.setQuestion(telegramSession.getOperation().getNextQuestion());
+
                 System.out.println(telegramSession.getOperation().getNextQuestion().getQuestion_az());
 
                 telegramSession.setOperation(operationRepo.getOperationsByQuestion(telegramSession.getQuestion()).get(0));
+
+                List<Operation> operations = operationRepo.getOperationsByQuestion(telegramSession.getQuestion());
 
 //
                 if (telegramSession.getOperation().getType().equals(OperationType.BUTTON)) {
@@ -114,7 +145,7 @@ public class MessageHandler {
                     System.out.println("button");
                     sendMessage.setReplyMarkup(keyboardService.getKeyboardButtons(telegramSession.getOperation().getQuestion(), telegramSession));
                 } else if (telegramSession.getOperation().getType().equals(OperationType.FREETEXT)) {
-                    if(update.getMessage().getText().equals("TourApp təklif etsin.")){
+                    if (update.getMessage().getText().equals("TourApp təklif etsin.")) {
                         System.out.println("bbbbbbbbbbbbbbbbbbbbbbbbbb");
                     }
                     System.out.println("freetext");
@@ -126,7 +157,7 @@ public class MessageHandler {
                 telegramSession.getQuestion_answer_map().put(telegramSession.getOperation().getQuestion().getKey(), update.getMessage().getText());
                 System.out.println(telegramSession.getQuestion_answer_map().toString());
 
-                telegramSession.setQuestion(telegramSession.getOperation().getNextQuestion());
+//                telegramSession.setQuestion(telegramSession.getOperation().getNextQuestion());
                 telegramSession.setOperation(operationRepo.getOperationsByQuestion(telegramSession.getQuestion()).get(0));
 
                 if (telegramSession.getOperation().getType().equals(OperationType.BUTTON)) {
@@ -143,7 +174,7 @@ public class MessageHandler {
                 telegramSession.getQuestion_answer_map().put(telegramSession.getOperation().getQuestion().getKey(), update.getMessage().getText());
                 System.out.println(telegramSession.getQuestion_answer_map().toString());
 
-                telegramSession.setQuestion(telegramSession.getOperation().getNextQuestion());
+//                telegramSession.setQuestion(telegramSession.getOperation().getNextQuestion());
                 telegramSession.setOperation(operationRepo.getOperationsByQuestion(telegramSession.getQuestion()).get(0));
 
                 if (telegramSession.getOperation().getType().equals(OperationType.BUTTON)) {
