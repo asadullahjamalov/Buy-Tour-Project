@@ -1,13 +1,14 @@
 package code.az.buytourproject;
 
-import code.az.buytourproject.components.TelegramFacade;
+import code.az.buytourproject.processors.TelegramFacade;
 import code.az.buytourproject.models.TelegramSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.telegram.telegrambots.bots.TelegramWebhookBot;
 import org.telegram.telegrambots.meta.api.methods.BotApiMethod;
 import org.telegram.telegrambots.meta.api.objects.Update;
 
-
+import java.util.HashMap;
+import java.util.Map;
 
 
 public class TelegramWebHook extends TelegramWebhookBot {
@@ -18,15 +19,14 @@ public class TelegramWebHook extends TelegramWebhookBot {
     @Autowired
     TelegramFacade telegramFacade;
 
-
-    TelegramSession telegramSession = new TelegramSession();
+    Map<Long, TelegramSession> telegramSessionMap = new HashMap<>();
 
 
     @Override
     public BotApiMethod<?> onWebhookUpdateReceived(Update update) {
 
         if (update.getMessage() != null && update.getMessage().hasText()) {
-            return telegramFacade.handleUpdate(update, telegramSession);
+            return telegramFacade.handleUpdate(update, telegramSessionMap);
         }
         return null;
 

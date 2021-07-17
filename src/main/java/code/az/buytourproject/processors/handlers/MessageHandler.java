@@ -1,4 +1,4 @@
-package code.az.buytourproject.components.handlers;
+package code.az.buytourproject.processors.handlers;
 
 import code.az.buytourproject.enums.OperationType;
 import code.az.buytourproject.models.Operation;
@@ -109,7 +109,7 @@ public class MessageHandler {
             setLocale(update, telegramSession);
         }
 
-        if (telegramSession.getOperation().getQuestion().getKey().equals("endMessage")) {
+        if (telegramSession.getOperation().getNextQuestion()==null) {
             if (telegramSession.getLocale().equals(operationRepo.findFirstOperation().getText_az())) {
                 return sendMessage.setChatId(update.getMessage().getChatId().toString()).setText("Anket başa çatdı.");
             } else if (telegramSession.getLocale().equals(operationRepo.findFirstOperation().getText_en())) {
@@ -121,7 +121,7 @@ public class MessageHandler {
 
 
         if (telegramSession.getOperation().getNextQuestion() != null) {
-            if (!telegramSession.getOperation().getQuestion().getKey().equals("endMessage")) {
+            if (!(telegramSession.getOperation().getNextQuestion()==null)) {
                 telegramSession.setQuestion(telegramSession.getOperation().getNextQuestion());
             }
 
