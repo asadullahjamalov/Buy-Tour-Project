@@ -21,9 +21,7 @@ public class Question {
     String question_az;
     String question_en;
     String question_ru;
-    @Enumerated(EnumType.STRING)
-    OperationType type;
-
     Boolean isFirst;
     String key;
+    String regex;
 }

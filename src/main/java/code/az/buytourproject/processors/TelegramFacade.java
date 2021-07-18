@@ -122,9 +122,25 @@ public class TelegramFacade {
                         return handleMessage(update, telegramSessionMap.get(update.getMessage().getChatId()));
                     }
                 } else if (operationList.get(0).getType().equals(OperationType.FREETEXT)) {
+                    if(telegramSessionMap.get(update.getMessage().getChatId()).getQuestion().getRegex()!=null
+                            && update.getMessage().getText().matches(telegramSessionMap.get(update.getMessage().getChatId()).getQuestion().getRegex())){
+                        System.out.println("match with regex");
+                    }else if(telegramSessionMap.get(update.getMessage().getChatId()).getQuestion().getRegex()!=null
+                            && !(update.getMessage().getText().matches(telegramSessionMap.get(update.getMessage().getChatId()).getQuestion().getRegex()))) {
+                        System.out.println("not match with regex");
+                        if(telegramSessionMap.get(update.getMessage().getChatId()).getLocale().equals(operationRepo.findFirstOperation().getText_az())){
+                            return new SendMessage(update.getMessage().getChatId(), "Cavabı doğru daxil edin.");
+                        }else if(telegramSessionMap.get(update.getMessage().getChatId()).getLocale().equals(operationRepo.findFirstOperation().getText_en())){
+                            return new SendMessage(update.getMessage().getChatId(), "Enter the correct answer.");
+                        }else {
+                            return new SendMessage(update.getMessage().getChatId(), "Введите правильный ответ.");
+                        }
+                    }
                     System.out.println("free in facade");
                     if (operationRepo.getOperationsByQuestion(telegramSessionMap.get(update.getMessage().getChatId()).getQuestion()).get(0).getNextQuestion()!=null){
                         telegramSessionMap.get(update.getMessage().getChatId()).setQuestion(operationList.get(0).getNextQuestion());
+                    }else{
+
                     }
 
                 }
@@ -141,8 +157,6 @@ public class TelegramFacade {
 
 
     public SendMessage setLocale(Update update, TelegramSession telegramSession) {
-//        telegramSession.setQuestion(operationRepo.findFirstOperation().getNextQuestion());
-//        telegramSession.setOperation(operationRepo.findFirstOperation());
         if (update.getMessage().getText().equals(operationRepo.findFirstOperation().getText_az())) {
             telegramSession.setChatId(update.getMessage().getFrom().getId());
             System.out.println("Az lang set");
@@ -169,12 +183,17 @@ public class TelegramFacade {
                 "Please, select a language." + "\n" + "Пожалуйста, выберите язык.");
     }
 
+
+
+
     public SendMessage handleMessage(Update update, TelegramSession telegramSession) {
         SendMessage sendMessage = new SendMessage();
 
-        if (!telegramSession.isActive())
+        if (!telegramSession.isActive()){
             return new SendMessage(update.getMessage().getChatId().toString(), "Zəhmət olmasa /start edin və dili seçin." + "\n" +
                     "Please /start and select a language." + "\n" + "Пожалуйста, /start и выберите язык.");
+        }
+
 
         if (operationRepo.getOperationsByQuestion(telegramSession.getQuestion()).get(0).getNextQuestion() == null) {
             if (telegramSession.getLocale().equals(operationRepo.findFirstOperation().getText_az())) {
@@ -187,7 +206,7 @@ public class TelegramFacade {
         }
 
 
-        if (telegramSession.getOperationList().get(0).getNextQuestion() != null) {
+        if (telegramSession.getOperationList().get(0).getQuestion() != null) {
 
             System.out.println("AAAAAAAAAAAAAAAAAAA");
 
@@ -197,8 +216,6 @@ public class TelegramFacade {
                 System.out.println(telegramSession.getQuestion().getQuestion_az());
 
                 telegramSession.getQuestion_answer_map().put(telegramSession.getQuestion().getKey(), update.getMessage().getText());
-
-//                operationRepo.getOperationsByQuestion(telegramSession.getQuestion());
 
                 if (operationRepo.getOperationsByQuestion(telegramSession.getQuestion()).size()>1) {
                     sendMessage.setReplyMarkup(keyboardService.getKeyboardButtons(telegramSession.getQuestion(), telegramSession));

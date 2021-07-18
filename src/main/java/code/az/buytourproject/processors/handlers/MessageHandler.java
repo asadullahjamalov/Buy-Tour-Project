@@ -31,7 +31,6 @@ public class MessageHandler {
         Message message = update.getMessage();
         long chatId = message.getChatId();
         telegramSession.setActive(true);
-//        telegramSession.setOperation(operationRepo.findFirstOperation());
         Question first_question = questionRepo.findFirstQuestion();
         String first_question_str = first_question.getQuestion_az() + "\n" + first_question.getQuestion_en() +
                 "\n" + first_question.getQuestion_ru();
@@ -57,8 +56,6 @@ public class MessageHandler {
         if (telegramSession.getChatId() == update.getMessage().getFrom().getId()) {
             telegramSession.setChatId(0);
             telegramSession.setActive(false);
-            telegramSession.setCurrentQuestion(null);
-            telegramSession.setOperation(null);
             telegramSession.setQuestion(null);
             telegramSession.getQuestion_answer_map().clear();
             if (telegramSession.getLocale().equals(operationRepo.findFirstOperation().getText_az())) {

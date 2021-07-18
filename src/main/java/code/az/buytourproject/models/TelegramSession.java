@@ -21,10 +21,8 @@ public class TelegramSession {
     int chatId;
     String locale;
     Map<String, String> question_answer_map = new HashMap<>();
-    Operation operation;
     List<Operation> operationList;
     Question question;
-    Question currentQuestion;
     boolean isActive;
 }
 
