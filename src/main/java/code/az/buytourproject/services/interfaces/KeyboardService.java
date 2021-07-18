@@ -6,5 +6,6 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMar
 
 public interface KeyboardService {
     ReplyKeyboardMarkup getKeyboardButtons(Question question, TelegramSession telegramSession);
+
     ReplyKeyboardMarkup getLocaleKeyboard();
 }

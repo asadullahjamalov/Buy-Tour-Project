@@ -7,6 +7,7 @@ import code.az.buytourproject.models.TelegramSession;
 import code.az.buytourproject.repositories.OperationRepo;
 import code.az.buytourproject.repositories.QuestionRepo;
 import code.az.buytourproject.services.KeyboardServiceImpl;
+import code.az.buytourproject.services.interfaces.MessageService;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Message;
@@ -20,11 +21,14 @@ public class MessageHandler {
     OperationRepo operationRepo;
     QuestionRepo questionRepo;
     KeyboardServiceImpl keyboardService;
+    MessageService messageService;
 
-    public MessageHandler(OperationRepo operationRepo, QuestionRepo questionRepo, KeyboardServiceImpl keyboardService) {
+    public MessageHandler(OperationRepo operationRepo, QuestionRepo questionRepo,
+                          KeyboardServiceImpl keyboardService, MessageService messageService) {
         this.operationRepo = operationRepo;
         this.questionRepo = questionRepo;
         this.keyboardService = keyboardService;
+        this.messageService = messageService;
     }
 
     public SendMessage handleStartCommand(Update update, TelegramSession telegramSession) {
@@ -57,24 +61,15 @@ public class MessageHandler {
             telegramSession.setChatId(0);
             telegramSession.setActive(false);
             telegramSession.setQuestion(null);
+            telegramSession.setOperationList(null);
             telegramSession.getQuestion_answer_map().clear();
-            if (telegramSession.getLocale().equals(operationRepo.findFirstOperation().getText_az())) {
-                telegramSession.setLocale(null);
-                return new SendMessage(update.getMessage().getChatId().toString(), "Sessiyanı dayandırdınız. Başlamaq üçün /start əmrini yerinə yetirin. ");
-            } else if (telegramSession.getLocale().equals(operationRepo.findFirstOperation().getText_en())) {
-                telegramSession.setLocale(null);
-                return new SendMessage(update.getMessage().getChatId().toString(), "You cancelled the session. Execute the /start command to get started. ");
-            } else if (telegramSession.getLocale().equals(operationRepo.findFirstOperation().getText_ru())) {
-                telegramSession.setLocale(null);
-                return new SendMessage(update.getMessage().getChatId().toString(), "Вы остановили сеанс. Выполните команду /start ,чтобы начать. ");
-            }
-        } else if (telegramSession.getChatId() == 0 && telegramSession.isActive() == false) {
-            return new SendMessage(update.getMessage().getChatId().toString(), "/stop -dan əvvəl /start etməlisiniz." + "\n" +
-                    "You must /start before /stop." + "\n" + "Вы должны /start до /stop .");
+            return messageService.sendStopSessionMessage(update.getMessage().getChatId(), telegramSession.getLocale(), telegramSession);
+        } else if (telegramSession.getChatId() == 0 && !telegramSession.isActive()) {
+            return messageService.sendStartBeforeStopMessage(update.getMessage().getChatId());
 
-        } else if (telegramSession.getChatId() == 0 && telegramSession.isActive() == true) {
-            return new SendMessage(update.getMessage().getChatId().toString(), "Zəhmət olmasa yenidən /start edin və dili seçin." + "\n" +
-                    "Please /start again and select a language." + "\n" + "Пожалуйста, /start еще раз и выберите язык.");
+        } else if (telegramSession.getChatId() == 0 && telegramSession.isActive()) {
+            telegramSession.setActive(false);
+            return messageService.sendStartAgainAndSelectLanguageMessage(update.getMessage().getChatId());
 
         }
         return null;
