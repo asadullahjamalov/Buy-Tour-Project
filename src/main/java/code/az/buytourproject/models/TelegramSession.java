@@ -24,6 +24,7 @@ public class TelegramSession {
     Operation operation;
     List<Operation> operationList;
     Question question;
+    Question currentQuestion;
     boolean isActive;
 }
 

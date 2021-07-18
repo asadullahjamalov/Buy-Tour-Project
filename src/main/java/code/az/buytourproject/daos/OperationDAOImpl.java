@@ -42,18 +42,4 @@ public class OperationDAOImpl implements OperationDAO {
         return operationRepo.getOperationsByNextQuestion(id);
     }
 
-    @Override
-    public Operation getOperationByText_az(String text) {
-        return operationRepo.getOperationByText_az(text);
-    }
-
-    @Override
-    public Operation getOperationByText_ru(String text) {
-        return operationRepo.getOperationByText_ru(text);
-    }
-
-    @Override
-    public Operation getOperationByText_en(String text) {
-        return operationRepo.getOperationByText_en(text);
-    }
 }

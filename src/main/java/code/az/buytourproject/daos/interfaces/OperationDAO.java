@@ -16,10 +16,4 @@ public interface OperationDAO {
     List<Operation> getOperationsByQuestion(Question question);
 
     List<Operation> getOperationsByNextQuestion(Long id);
-
-    Operation getOperationByText_az(String text);
-
-    Operation getOperationByText_ru(String text);
-
-    Operation getOperationByText_en(String text);
 }

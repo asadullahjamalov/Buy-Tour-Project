@@ -1,5 +1,6 @@
 package code.az.buytourproject.models;
 
+import code.az.buytourproject.enums.OperationType;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -16,11 +17,13 @@ import javax.persistence.*;
 public class Question {
 
     @Id
-    private Long id;
-    private String question_az;
-    private String question_en;
-    private String question_ru;
+    Long id;
+    String question_az;
+    String question_en;
+    String question_ru;
+    @Enumerated(EnumType.STRING)
+    OperationType type;
 
-    private Boolean isFirst;
-    private String key;
+    Boolean isFirst;
+    String key;
 }

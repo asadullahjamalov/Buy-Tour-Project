@@ -23,13 +23,5 @@ public interface OperationRepo extends JpaRepository<Operation, Long> {
     @Query("select a from Operation a where a.nextQuestion.id=:id")
     List<Operation> getOperationsByNextQuestion(Long id);
 
-    @Query("select a from Operation a where a.text_az=:text")
-    Operation getOperationByText_az(String text);
-
-    @Query("select a from Operation a where a.text_ru=:text")
-    Operation getOperationByText_ru(String text);
-
-    @Query("select a from Operation a where a.text_en=:text")
-    Operation getOperationByText_en(String text);
 
 }

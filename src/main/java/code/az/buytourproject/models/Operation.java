@@ -16,18 +16,18 @@ import javax.persistence.*;
 @Table(name = "operations")
 public class Operation {
     @Id
-    private Long id;
+    Long id;
     @Enumerated(EnumType.STRING)
-    private OperationType type;
-    private String text_az;
-    private String text_en;
-    private String text_ru;
+    OperationType type;
+    String text_az;
+    String text_en;
+    String text_ru;
     @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "question_Id")
-    private Question question;
+    Question question;
     @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "next_question_id")
-    private Question nextQuestion;
+    Question nextQuestion;
 
 
 }
