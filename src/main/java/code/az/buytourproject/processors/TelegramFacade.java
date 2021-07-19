@@ -89,39 +89,40 @@ public class TelegramFacade {
 
                 List<Operation> operationList = operationRepo.getOperationsByQuestion(telegramSessionMap.get(update.getMessage().getChatId()).getQuestion());
                 if (operationList.get(0).getType().equals(OperationType.BUTTON)) {
-                    int counter = 0;
-                    for (int i = 0; i < operationList.size(); i++) {
-                        System.out.println(operationList.get(i).getText_az());
-                        System.out.println(operationList.get(i).getText_en());
-                        System.out.println(operationList.get(i).getText_ru());
+                    boolean counter = false;
+                    for (Operation operation : operationList) {
+                        System.out.println(operation.getText_az());
+                        System.out.println(operation.getText_en());
+                        System.out.println(operation.getText_ru());
                         System.out.println(update.getMessage().getText());
                         System.out.println("-------------------------");
-//                        System.out.println(telegramSessionMap.get(update.getMessage().getChatId()).getLocale());
-//                        System.out.println(operationRepo.findFirstOperation().getText_az());
-
+                        System.out.println(telegramSessionMap.get(update.getMessage().getChatId()).getLocale());
+                        System.out.println(operationRepo.findFirstOperation().getText_az());
                         if (telegramSessionMap.get(update.getMessage().getChatId()).getLocale().equals(operationRepo.findFirstOperation().getText_az())
-                                && update.getMessage().getText().equals(operationList.get(i).getText_az())) {
+                                && update.getMessage().getText().equals(operation.getText_az().trim())) {
                             System.out.println("in loop az");
-                            counter++;
-                            telegramSessionMap.get(update.getMessage().getChatId()).setQuestion(operationList.get(i).getNextQuestion());
+                            counter = true;
+                            telegramSessionMap.get(update.getMessage().getChatId()).setQuestion(operation.getNextQuestion());
                             break;
-                        }
+                        }else
                         if (telegramSessionMap.get(update.getMessage().getChatId()).getLocale().equals(operationRepo.findFirstOperation().getText_en())
-                                && update.getMessage().getText().equals(operationList.get(i).getText_en())) {
+                                && update.getMessage().getText().equals(operation.getText_en())) {
                             System.out.println("in loop en");
-                            counter++;
-                            telegramSessionMap.get(update.getMessage().getChatId()).setQuestion(operationList.get(i).getNextQuestion());
+                            counter = true;
+                            telegramSessionMap.get(update.getMessage().getChatId()).setQuestion(operation.getNextQuestion());
                             break;
-                        }
+                        }else
                         if (telegramSessionMap.get(update.getMessage().getChatId()).getLocale().equals(operationRepo.findFirstOperation().getText_ru())
-                                && update.getMessage().getText().equals(operationList.get(i).getText_ru())) {
+                                && update.getMessage().getText().equals(operation.getText_ru())) {
                             System.out.println("in loop ru");
-                            counter++;
-                            telegramSessionMap.get(update.getMessage().getChatId()).setQuestion(operationList.get(i).getNextQuestion());
+                            counter = true;
+                            telegramSessionMap.get(update.getMessage().getChatId()).setQuestion(operation.getNextQuestion());
                             break;
+                        }else{
+                            System.out.println("in else condition");
                         }
                     }
-                    if (counter == 0) {
+                    if (counter == false) {
                         return messageService.sendWrongAnswerMessage(telegramSessionMap.get(update.getMessage().getChatId()).getChatId(),
                                 telegramSessionMap.get(update.getMessage().getChatId()).getLocale());
                     } else {
@@ -137,17 +138,17 @@ public class TelegramFacade {
                         return messageService.sendWrongAnswerMessage(telegramSessionMap.get(update.getMessage().getChatId()).getChatId(),
                                 telegramSessionMap.get(update.getMessage().getChatId()).getLocale());
                     }
-                    System.out.println("free in facade");
+                    System.out.println("freetext in facade");
                     if (operationRepo.getOperationsByQuestion(telegramSessionMap.get(update.getMessage().getChatId()).getQuestion()).get(0).getNextQuestion() != null) {
                         telegramSessionMap.get(update.getMessage().getChatId()).setQuestion(operationList.get(0).getNextQuestion());
                     } else {
                         SendMessage sendMessage = new SendMessage();
                         if (telegramSessionMap.get(update.getMessage().getChatId()).getLocale().equals(operationRepo.findFirstOperation().getText_az())) {
-                            return sendMessage.setChatId(update.getMessage().getChatId().toString()).setText("Anket başa çatdı.");
+                            return sendMessage.setChatId(update.getMessage().getChatId().toString()).setText("Anket başa çatıb. \n"+ telegramSessionMap.get(update.getMessage().getChatId()).getQuestion_answer_map().toString());
                         } else if (telegramSessionMap.get(update.getMessage().getChatId()).getLocale().equals(operationRepo.findFirstOperation().getText_en())) {
-                            return sendMessage.setChatId(update.getMessage().getChatId().toString()).setText("The survey is over.");
+                            return sendMessage.setChatId(update.getMessage().getChatId().toString()).setText("The survey was finished. \n"+ telegramSessionMap.get(update.getMessage().getChatId()).getQuestion_answer_map().toString());
                         } else if (telegramSessionMap.get(update.getMessage().getChatId()).getLocale().equals(operationRepo.findFirstOperation().getText_ru())) {
-                            return sendMessage.setChatId(update.getMessage().getChatId().toString()).setText("Опрос окончен.");
+                            return sendMessage.setChatId(update.getMessage().getChatId().toString()).setText("Опрос окончен. \n"+ telegramSessionMap.get(update.getMessage().getChatId()).getQuestion_answer_map().toString());
                         }
                     }
 
