@@ -15,11 +15,6 @@ public class QuestionDAOImpl implements QuestionDAO {
     }
 
     @Override
-    public Question findQuestionById(Long id) {
-        return questionRepo.findQuestionById(id);
-    }
-
-    @Override
     public Question findFirstQuestion() {
         return questionRepo.findFirstQuestion();
     }

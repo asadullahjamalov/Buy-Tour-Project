@@ -1,9 +1,9 @@
 package code.az.buytourproject.services;
 
+import code.az.buytourproject.daos.interfaces.OperationDAO;
 import code.az.buytourproject.models.Operation;
 import code.az.buytourproject.models.Question;
 import code.az.buytourproject.models.TelegramSession;
-import code.az.buytourproject.repositories.OperationRepo;
 import code.az.buytourproject.services.interfaces.KeyboardService;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
@@ -16,10 +16,10 @@ import java.util.List;
 @Service
 public class KeyboardServiceImpl implements KeyboardService {
 
-    OperationRepo operationRepo;
+    OperationDAO operationDAO;
 
-    public KeyboardServiceImpl(OperationRepo operationRepo) {
-        this.operationRepo = operationRepo;
+    public KeyboardServiceImpl(OperationDAO operationDAO) {
+        this.operationDAO = operationDAO;
     }
 
     @Override
@@ -29,15 +29,15 @@ public class KeyboardServiceImpl implements KeyboardService {
         replyKeyboardMarkup.setResizeKeyboard(true);
         replyKeyboardMarkup.setOneTimeKeyboard(true);
 
-        List<Operation> operations = operationRepo.findOperationByQuestion(question);
+        List<Operation> operations = operationDAO.findOperationByQuestion(question);
         List<KeyboardRow> keyboard = new ArrayList<>();
         KeyboardRow row = new KeyboardRow();
         for (Operation operation : operations) {
-            if (telegramSession.getLocale().equals(operationRepo.findFirstOperation().getText_az())) {
+            if (telegramSession.getLocale().equals(operationDAO.findFirstOperation().getText_az())) {
                 row.add(new KeyboardButton(operation.getText_az()));
-            } else if (telegramSession.getLocale().equals(operationRepo.findFirstOperation().getText_en())) {
+            } else if (telegramSession.getLocale().equals(operationDAO.findFirstOperation().getText_en())) {
                 row.add(new KeyboardButton(operation.getText_en()));
-            } else if (telegramSession.getLocale().equals(operationRepo.findFirstOperation().getText_ru())) {
+            } else if (telegramSession.getLocale().equals(operationDAO.findFirstOperation().getText_ru())) {
                 row.add(new KeyboardButton(operation.getText_ru()));
             }
         }
@@ -52,7 +52,7 @@ public class KeyboardServiceImpl implements KeyboardService {
         replyKeyboardMarkup.setSelective(false);
         replyKeyboardMarkup.setResizeKeyboard(true);
         replyKeyboardMarkup.setOneTimeKeyboard(true);
-        Operation first_operation = operationRepo.findFirstOperation();
+        Operation first_operation = operationDAO.findFirstOperation();
         List<KeyboardRow> keyboard = new ArrayList<>();
         KeyboardRow row = new KeyboardRow();
         row.add(first_operation.getText_az());

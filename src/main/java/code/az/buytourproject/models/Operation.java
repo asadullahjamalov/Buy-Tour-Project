@@ -22,10 +22,10 @@ public class Operation {
     String text_az;
     String text_en;
     String text_ru;
-    @ManyToOne(cascade = CascadeType.ALL)
+    @ManyToOne
     @JoinColumn(name = "question_Id")
     Question question;
-    @ManyToOne(cascade = CascadeType.ALL)
+    @ManyToOne
     @JoinColumn(name = "next_question_id")
     Question nextQuestion;
 

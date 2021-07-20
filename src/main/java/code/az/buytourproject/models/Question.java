@@ -15,7 +15,6 @@ import javax.persistence.*;
 @Entity
 @Table(name = "questions")
 public class Question {
-
     @Id
     Long id;
     String question_az;

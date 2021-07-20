@@ -23,11 +23,6 @@ public class OperationDAOImpl implements OperationDAO {
     }
 
     @Override
-    public Question findNextQuestionById(Long id) {
-        return operationRepo.findNextQuestionById(id);
-    }
-
-    @Override
     public Operation findFirstOperation() {
         return operationRepo.findFirstOperation();
     }
@@ -35,11 +30,6 @@ public class OperationDAOImpl implements OperationDAO {
     @Override
     public List<Operation> getOperationsByQuestion(Question question) {
         return operationRepo.getOperationsByQuestion(question);
-    }
-
-    @Override
-    public List<Operation> getOperationsByNextQuestion(Long id) {
-        return operationRepo.getOperationsByNextQuestion(id);
     }
 
 }

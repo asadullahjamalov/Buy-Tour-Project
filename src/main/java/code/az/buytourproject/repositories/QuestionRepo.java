@@ -8,9 +8,6 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface QuestionRepo extends JpaRepository<Question, Long> {
 
-    @Query("select q from Question q where q.id =:id")
-    Question findQuestionById(Long id);
-
     @Query("select q from Question q where q.isFirst=true")
     Question findFirstQuestion();
 
