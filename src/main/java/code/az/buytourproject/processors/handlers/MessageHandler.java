@@ -1,5 +1,6 @@
 package code.az.buytourproject.processors.handlers;
 
+import code.az.buytourproject.cache.RedisCache;
 import code.az.buytourproject.daos.interfaces.OperationDAO;
 import code.az.buytourproject.daos.interfaces.QuestionDAO;
 import code.az.buytourproject.enums.OperationType;
@@ -16,13 +17,15 @@ public class MessageHandler {
     QuestionDAO questionDAO;
     KeyboardService keyboardService;
     MessageService messageService;
+    RedisCache redisCache;
 
     public MessageHandler(OperationDAO operationDAO, QuestionDAO questionDAO,
-                          KeyboardService keyboardService, MessageService messageService) {
+                          KeyboardService keyboardService, MessageService messageService, RedisCache redisCache) {
         this.operationDAO = operationDAO;
         this.questionDAO = questionDAO;
         this.keyboardService = keyboardService;
         this.messageService = messageService;
+        this.redisCache = redisCache;
     }
 
     public SendMessage handleStartCommand(Update update, TelegramSession telegramSession) {
@@ -40,6 +43,7 @@ public class MessageHandler {
             telegramSession.setQuestion(null);
             telegramSession.setOperationList(null);
             telegramSession.getQuestion_answer_map().clear();
+            redisCache.delete(update.getMessage().getChatId());
             return messageService.sendStopSessionMessage(update.getMessage().getChatId(), telegramSession.getLocale(), telegramSession);
         } else if (telegramSession.getChatId() == 0 && !telegramSession.isActive()) {
             return messageService.sendStartBeforeStopMessage(update.getMessage().getChatId());

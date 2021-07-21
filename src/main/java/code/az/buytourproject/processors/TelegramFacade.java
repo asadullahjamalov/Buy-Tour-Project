@@ -1,5 +1,6 @@
 package code.az.buytourproject.processors;
 
+import code.az.buytourproject.cache.RedisCache;
 import code.az.buytourproject.daos.interfaces.OperationDAO;
 import code.az.buytourproject.daos.interfaces.QuestionDAO;
 import code.az.buytourproject.enums.OperationType;
@@ -22,13 +23,15 @@ import java.util.Map;
 @Slf4j
 public class TelegramFacade {
 
+    RedisCache redisCache;
     MessageHandler messageHandler;
     OperationDAO operationDAO;
     QuestionDAO questionDAO;
     MessageService messageService;
 
-    public TelegramFacade(MessageHandler messageHandler, OperationDAO operationDAO,
+    public TelegramFacade(RedisCache redisCache, MessageHandler messageHandler, OperationDAO operationDAO,
                           QuestionDAO questionDAO, MessageService messageService) {
+        this.redisCache = redisCache;
         this.messageHandler = messageHandler;
         this.operationDAO = operationDAO;
         this.questionDAO = questionDAO;
@@ -105,6 +108,10 @@ public class TelegramFacade {
                     if (operationDAO.getOperationsByQuestion(telegramSessionMap.get(update.getMessage().getChatId()).getQuestion()).get(0).getNextQuestion() != null) {
                         telegramSessionMap.get(update.getMessage().getChatId()).setQuestion(operationList.get(0).getNextQuestion());
                     } else {
+
+                        //TODO
+                        redisCache.save(update.getMessage().getChatId(), telegramSessionMap.get(update.getMessage().getChatId()));
+                        System.out.println("redis " + redisCache.findById(update.getMessage().getChatId()).getQuestion_answer_map().toString());
                         return messageService.sendSurveyFinishedMessage(update.getMessage().getChatId(), telegramSessionMap.get(update.getMessage().getChatId()).getLocale(),
                                 telegramSessionMap.get(update.getMessage().getChatId()).getQuestion_answer_map().toString());
                     }
