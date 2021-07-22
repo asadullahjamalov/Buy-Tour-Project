@@ -29,7 +29,7 @@ public class KeyboardServiceImpl implements KeyboardService {
         replyKeyboardMarkup.setResizeKeyboard(true);
         replyKeyboardMarkup.setOneTimeKeyboard(true);
 
-        List<Operation> operations = operationDAO.findOperationByQuestion(question);
+        List<Operation> operations = operationDAO.findOperationsByQuestion(question);
         List<KeyboardRow> keyboard = new ArrayList<>();
         KeyboardRow row = new KeyboardRow();
         for (Operation operation : operations) {

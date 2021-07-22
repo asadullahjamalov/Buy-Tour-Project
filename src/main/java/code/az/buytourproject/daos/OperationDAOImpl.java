@@ -18,18 +18,13 @@ public class OperationDAOImpl implements OperationDAO {
     }
 
     @Override
-    public List<Operation> findOperationByQuestion(Question question) {
-        return operationRepo.findOperationByQuestion(question);
+    public List<Operation> findOperationsByQuestion(Question question) {
+        return operationRepo.findOperationsByQuestion(question);
     }
 
     @Override
     public Operation findFirstOperation() {
         return operationRepo.findFirstOperation();
-    }
-
-    @Override
-    public List<Operation> getOperationsByQuestion(Question question) {
-        return operationRepo.getOperationsByQuestion(question);
     }
 
 }

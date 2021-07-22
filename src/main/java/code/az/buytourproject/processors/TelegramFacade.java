@@ -9,12 +9,14 @@ import code.az.buytourproject.processors.handlers.MessageHandler;
 import code.az.buytourproject.enums.CommandType;
 import code.az.buytourproject.models.TelegramSession;
 import code.az.buytourproject.services.interfaces.MessageService;
+import code.az.buytourproject.services.interfaces.RabbitMQService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.BotApiMethod;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -28,96 +30,97 @@ public class TelegramFacade {
     OperationDAO operationDAO;
     QuestionDAO questionDAO;
     MessageService messageService;
+    RabbitMQService rabbitMQService;
+
+    Map<Long, TelegramSession> telegramSessionMap = new HashMap<>();
 
     public TelegramFacade(RedisCache redisCache, MessageHandler messageHandler, OperationDAO operationDAO,
-                          QuestionDAO questionDAO, MessageService messageService) {
+                          QuestionDAO questionDAO, MessageService messageService, RabbitMQService rabbitMQService) {
         this.redisCache = redisCache;
         this.messageHandler = messageHandler;
         this.operationDAO = operationDAO;
         this.questionDAO = questionDAO;
         this.messageService = messageService;
+        this.rabbitMQService = rabbitMQService;
     }
 
-    public BotApiMethod<?> handleUpdate(Update update, Map<Long, TelegramSession> telegramSessionMap) {
+    public BotApiMethod<?> handleUpdate(Update update) {
         log.info("New message from User:{}, chatId: {},  with text: {}",
                 update.getMessage().getFrom().getFirstName(), update.getMessage().getChatId(), update.getMessage().getText());
         if (!telegramSessionMap.containsKey(update.getMessage().getChatId())) {
             telegramSessionMap.put(update.getMessage().getChatId(), new TelegramSession());
         }
-
+        TelegramSession telegramSession = telegramSessionMap.get(update.getMessage().getChatId());
         String inputMessage = update.getMessage().getText();
         if (inputMessage.equals(CommandType.START.getValue())) {
-            telegramSessionMap.get(update.getMessage().getChatId()).setQuestion(questionDAO.findFirstQuestion());
-            telegramSessionMap.get(update.getMessage().getChatId())
-                    .setOperationList(operationDAO.getOperationsByQuestion(telegramSessionMap.get(update.getMessage().getChatId()).getQuestion()));
-            return messageHandler.handleStartCommand(update, telegramSessionMap.get(update.getMessage().getChatId()));
+            telegramSession.setQuestion(questionDAO.findFirstQuestion());
+            telegramSession.setOperationList(operationDAO.findOperationsByQuestion(telegramSession.getQuestion()));
+            return messageHandler.handleStartCommand(update, telegramSession);
         } else if (inputMessage.equals(CommandType.STOP.getValue())) {
-            return messageHandler.handleStopCommand(update, telegramSessionMap.get(update.getMessage().getChatId()));
+            return messageHandler.handleStopCommand(update, telegramSession);
         } else {
-            if (!telegramSessionMap.get(update.getMessage().getChatId()).isActive())
+            if (!telegramSession.isActive())
                 return new SendMessage(update.getMessage().getChatId(), "Zəhmət olmasa /start edin və dili seçin." + "\n" +
                         "Please /start and select a language." + "\n" + "Пожалуйста, /start и выберите язык.");
 
-            if (telegramSessionMap.get(update.getMessage().getChatId()).getLocale() == null) {
-                List<Operation> operationList = telegramSessionMap.get(update.getMessage().getChatId()).getOperationList();
-                telegramSessionMap.get(update.getMessage().getChatId()).setQuestion(operationList.get(0).getNextQuestion());
-                return setLocale(update, telegramSessionMap.get(update.getMessage().getChatId()));
+            if (telegramSession.getLocale() == null) {
+                List<Operation> operationList = telegramSession.getOperationList();
+                telegramSession.setQuestion(operationList.get(0).getNextQuestion());
+                return setLocale(update, telegramSession);
             }
-            if (telegramSessionMap.get(update.getMessage().getChatId()).getLocale() != null
-                    && telegramSessionMap.get(update.getMessage().getChatId()).getQuestion() != null) {
-                if (operationDAO.getOperationsByQuestion(telegramSessionMap.get(update.getMessage().getChatId()).getQuestion()).get(0).getNextQuestion() != null) {
-                    telegramSessionMap.get(update.getMessage().getChatId()).getQuestion_answer_map().put(
-                            operationDAO.getOperationsByQuestion(telegramSessionMap.get(update.getMessage().getChatId()).getQuestion()).get(0).getQuestion().getKey(),
+            if (telegramSession.getLocale() != null && telegramSession.getQuestion() != null) {
+                if (operationDAO.findOperationsByQuestion(telegramSession.getQuestion()).get(0).getNextQuestion() != null) {
+                    telegramSession.getQuestion_answer_map().put(
+                            operationDAO.findOperationsByQuestion(telegramSession.getQuestion()).get(0).getQuestion().getKey(),
                             update.getMessage().getText());
                 }
 
 
-                List<Operation> operationList = operationDAO.getOperationsByQuestion(telegramSessionMap.get(update.getMessage().getChatId()).getQuestion());
+                List<Operation> operationList = operationDAO.findOperationsByQuestion(telegramSession.getQuestion());
                 if (operationList.get(0).getType().equals(OperationType.BUTTON)) {
                     boolean counter = false;
                     for (Operation operation : operationList) {
-                        if (telegramSessionMap.get(update.getMessage().getChatId()).getLocale().equals(operationDAO.findFirstOperation().getText_az())
+                        if (telegramSession.getLocale().equals(operationDAO.findFirstOperation().getText_az())
                                 && update.getMessage().getText().equals(operation.getText_az())) {
                             counter = true;
-                            telegramSessionMap.get(update.getMessage().getChatId()).setQuestion(operation.getNextQuestion());
+                            telegramSession.setQuestion(operation.getNextQuestion());
                             break;
-                        } else if (telegramSessionMap.get(update.getMessage().getChatId()).getLocale().equals(operationDAO.findFirstOperation().getText_en())
+                        } else if (telegramSession.getLocale().equals(operationDAO.findFirstOperation().getText_en())
                                 && update.getMessage().getText().equals(operation.getText_en())) {
                             counter = true;
-                            telegramSessionMap.get(update.getMessage().getChatId()).setQuestion(operation.getNextQuestion());
+                            telegramSession.setQuestion(operation.getNextQuestion());
                             break;
-                        } else if (telegramSessionMap.get(update.getMessage().getChatId()).getLocale().equals(operationDAO.findFirstOperation().getText_ru())
+                        } else if (telegramSession.getLocale().equals(operationDAO.findFirstOperation().getText_ru())
                                 && update.getMessage().getText().equals(operation.getText_ru())) {
                             counter = true;
-                            telegramSessionMap.get(update.getMessage().getChatId()).setQuestion(operation.getNextQuestion());
+                            telegramSession.setQuestion(operation.getNextQuestion());
                             break;
                         }
                     }
                     if (!counter) {
-                        return messageService.sendWrongAnswerMessage(telegramSessionMap.get(update.getMessage().getChatId()).getChatId(),
-                                telegramSessionMap.get(update.getMessage().getChatId()).getLocale());
+                        return messageService.sendWrongAnswerMessage(telegramSession.getChatId(), telegramSession.getLocale());
                     } else {
-                        return messageHandler.handleMessage(update, telegramSessionMap.get(update.getMessage().getChatId()));
+                        return messageHandler.handleMessage(update, telegramSession);
                     }
                 } else if (operationList.get(0).getType().equals(OperationType.FREETEXT)) {
-                    if (telegramSessionMap.get(update.getMessage().getChatId()).getQuestion().getRegex() != null
-                            && !(update.getMessage().getText().matches(telegramSessionMap.get(update.getMessage().getChatId()).getQuestion().getRegex()))) {
-                        return messageService.sendWrongAnswerMessage(telegramSessionMap.get(update.getMessage().getChatId()).getChatId(),
-                                telegramSessionMap.get(update.getMessage().getChatId()).getLocale());
+                    if (telegramSession.getQuestion().getRegex() != null
+                            && !(update.getMessage().getText().matches(telegramSession.getQuestion().getRegex()))) {
+                        return messageService.sendWrongAnswerMessage(telegramSession.getChatId(), telegramSession.getLocale());
                     }
-                    if (operationDAO.getOperationsByQuestion(telegramSessionMap.get(update.getMessage().getChatId()).getQuestion()).get(0).getNextQuestion() != null) {
-                        telegramSessionMap.get(update.getMessage().getChatId()).setQuestion(operationList.get(0).getNextQuestion());
+                    if (operationDAO.findOperationsByQuestion(telegramSession.getQuestion()).get(0).getNextQuestion() != null) {
+                        telegramSession.setQuestion(operationList.get(0).getNextQuestion());
                     } else {
 
+                        rabbitMQService.send(telegramSession);
                         //TODO
-                        redisCache.save(update.getMessage().getChatId(), telegramSessionMap.get(update.getMessage().getChatId()));
+                        redisCache.save(update.getMessage().getChatId(), telegramSession);
                         System.out.println("redis " + redisCache.findById(update.getMessage().getChatId()).getQuestion_answer_map().toString());
-                        return messageService.sendSurveyFinishedMessage(update.getMessage().getChatId(), telegramSessionMap.get(update.getMessage().getChatId()).getLocale(),
-                                telegramSessionMap.get(update.getMessage().getChatId()).getQuestion_answer_map().toString());
+                        return messageService.sendSurveyFinishedMessage(update.getMessage().getChatId(), telegramSession.getLocale(),
+                                telegramSession.getQuestion_answer_map().toString());
                     }
 
                 }
-                return messageHandler.handleMessage(update, telegramSessionMap.get(update.getMessage().getChatId()));
+                return messageHandler.handleMessage(update, telegramSession);
             }
             return new SendMessage(update.getMessage().getChatId(), "Try again , lang");
         }

@@ -9,12 +9,9 @@ import java.util.List;
 
 public interface OperationRepo extends JpaRepository<Operation, Long> {
 
-    List<Operation> findOperationByQuestion(Question question);
+    List<Operation> findOperationsByQuestion(Question question);
 
-    @Query("select a from Operation a where a.question.isFirst=true")
+    @Query("select o from Operation o where o.question.isFirst=true")
     Operation findFirstOperation();
-
-    @Query("select a from Operation a where a.question=:question")
-    List<Operation> getOperationsByQuestion(Question question);
 
 }

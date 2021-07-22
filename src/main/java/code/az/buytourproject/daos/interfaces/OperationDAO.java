@@ -7,10 +7,8 @@ import java.util.List;
 
 public interface OperationDAO {
 
-    List<Operation> findOperationByQuestion(Question question);
+    List<Operation> findOperationsByQuestion(Question question);
 
     Operation findFirstOperation();
-
-    List<Operation> getOperationsByQuestion(Question question);
 
 }

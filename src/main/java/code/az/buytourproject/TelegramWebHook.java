@@ -19,14 +19,14 @@ public class TelegramWebHook extends TelegramWebhookBot {
     @Autowired
     TelegramFacade telegramFacade;
 
-    Map<Long, TelegramSession> telegramSessionMap = new HashMap<>();
+
 
 
     @Override
     public BotApiMethod<?> onWebhookUpdateReceived(Update update) {
 
         if (update.getMessage() != null && update.getMessage().hasText()) {
-            return telegramFacade.handleUpdate(update, telegramSessionMap);
+            return telegramFacade.handleUpdate(update);
         }
         return null;
 

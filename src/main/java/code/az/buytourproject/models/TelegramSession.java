@@ -6,6 +6,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import java.io.Serializable;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -25,5 +26,6 @@ public class TelegramSession implements Serializable {
     List<Operation> operationList;
     Question question;
     boolean isActive;
+    Date createdDate;
 }
 
