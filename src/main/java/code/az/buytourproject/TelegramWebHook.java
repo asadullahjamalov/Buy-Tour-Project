@@ -1,16 +1,13 @@
 package code.az.buytourproject;
 
 import code.az.buytourproject.processors.TelegramFacade;
-import code.az.buytourproject.models.TelegramSession;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.telegram.telegrambots.bots.TelegramWebhookBot;
 import org.telegram.telegrambots.meta.api.methods.BotApiMethod;
 import org.telegram.telegrambots.meta.api.objects.Update;
 
-import java.util.HashMap;
-import java.util.Map;
-
-
+@Slf4j
 public class TelegramWebHook extends TelegramWebhookBot {
     private String webHookPath;
     private String botUserName;
@@ -19,13 +16,12 @@ public class TelegramWebHook extends TelegramWebhookBot {
     @Autowired
     TelegramFacade telegramFacade;
 
-
-
-
     @Override
     public BotApiMethod<?> onWebhookUpdateReceived(Update update) {
 
         if (update.getMessage() != null && update.getMessage().hasText()) {
+            log.info("New message from User:{}, chatId: {},  with text: {}",
+                    update.getMessage().getFrom().getFirstName(), update.getMessage().getChatId(), update.getMessage().getText());
             return telegramFacade.handleUpdate(update);
         }
         return null;

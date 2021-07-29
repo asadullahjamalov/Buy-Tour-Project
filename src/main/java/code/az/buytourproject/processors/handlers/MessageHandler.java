@@ -5,45 +5,53 @@ import code.az.buytourproject.daos.interfaces.OperationDAO;
 import code.az.buytourproject.daos.interfaces.QuestionDAO;
 import code.az.buytourproject.enums.OperationType;
 import code.az.buytourproject.models.TelegramSession;
+import code.az.buytourproject.repositories.TelegramSessionRepo;
 import code.az.buytourproject.services.interfaces.KeyboardService;
 import code.az.buytourproject.services.interfaces.MessageService;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
 
+import java.util.Map;
+
 @Component
 public class MessageHandler {
-    OperationDAO operationDAO;
-    QuestionDAO questionDAO;
-    KeyboardService keyboardService;
-    MessageService messageService;
-    RedisCache redisCache;
+    private OperationDAO operationDAO;
+    private QuestionDAO questionDAO;
+    private KeyboardService keyboardService;
+    private MessageService messageService;
+    private RedisCache redisCache;
+    private TelegramSessionRepo telegramSessionRepo;
 
     public MessageHandler(OperationDAO operationDAO, QuestionDAO questionDAO,
-                          KeyboardService keyboardService, MessageService messageService, RedisCache redisCache) {
+                          KeyboardService keyboardService, MessageService messageService, RedisCache redisCache, TelegramSessionRepo telegramSessionRepo) {
         this.operationDAO = operationDAO;
         this.questionDAO = questionDAO;
         this.keyboardService = keyboardService;
         this.messageService = messageService;
         this.redisCache = redisCache;
+        this.telegramSessionRepo = telegramSessionRepo;
     }
 
     public SendMessage handleStartCommand(Update update, TelegramSession telegramSession) {
         telegramSession.setActive(true);
-        if (telegramSession.getChatId() == update.getMessage().getFrom().getId()) {
+        if (telegramSession.getChatId() == update.getMessage().getFrom().getId().longValue()) {
             return messageService.sendSessionAlreadyStartedMessage(update.getMessage().getChatId(), telegramSession.getLocale());
         }
         return messageService.sendFirstMessage(update.getMessage().getChatId());
     }
 
-    public SendMessage handleStopCommand(Update update, TelegramSession telegramSession) {
-        if (telegramSession.getChatId() == update.getMessage().getFrom().getId()) {
+    public SendMessage handleStopCommand(Update update, Map<Long, TelegramSession> telegramSessionMap) {
+       TelegramSession telegramSession = telegramSessionMap.get(update.getMessage().getFrom().getId().longValue());
+        if (telegramSession.getChatId() == update.getMessage().getFrom().getId().longValue()) {
+            telegramSessionRepo.deactivateTelegramSession(telegramSession.getChatId());
             redisCache.delete(update.getMessage().getChatId());
-            telegramSession.setChatId(0);
+            telegramSession.setChatId(0l);
             telegramSession.setActive(false);
             telegramSession.setQuestion(null);
             telegramSession.setOperationList(null);
             telegramSession.getQuestion_answer_map().clear();
+            telegramSessionMap.remove(update.getMessage().getFrom().getId().longValue());
             return messageService.sendStopSessionMessage(update.getMessage().getChatId(), telegramSession.getLocale(), telegramSession);
         } else if (telegramSession.getChatId() == 0 && !telegramSession.isActive()) {
             return messageService.sendStartBeforeStopMessage(update.getMessage().getChatId());

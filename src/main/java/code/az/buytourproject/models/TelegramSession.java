@@ -1,31 +1,40 @@
 package code.az.buytourproject.models;
 
 import lombok.*;
+import lombok.experimental.FieldDefaults;
 
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
+import javax.persistence.*;
 import java.io.Serializable;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.*;
 
 @Setter
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder(toBuilder = true)
+@FieldDefaults(level= AccessLevel.PRIVATE)
+@Entity
+@Table(name = "telegram_sessions")
 public class TelegramSession implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
-    int chatId;
+    long chatId;
+    String uuid = UUID.randomUUID().toString();
     String locale;
-    Map<String, String> question_answer_map = new HashMap<>();
-    List<Operation> operationList;
-    Question question;
-    boolean isActive;
-    Date createdDate;
-}
 
+    @ElementCollection
+    Map<String, String> question_answer_map = new HashMap<>();
+
+    @Transient
+    List<Operation> operationList;
+
+    @OneToOne
+    @JoinColumn(name = "question_id")
+    Question question;
+
+    boolean isActive;
+    LocalDateTime createdDate = LocalDateTime.now();
+}

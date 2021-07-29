@@ -16,13 +16,10 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class RabbitMQConfig {
 
-//    @Value("${javainuse.rabbitmq.queue}")
-    String queueName = "telegram_bot_queue";
+    private String queueName = "telegram_bot_queue";
 
-//    @Value("${javainuse.rabbitmq.exchange}")
-    String exchange = "telegram_bot_exchange";
+    private String exchange = "telegram_bot_exchange";
 
-//    @Value("${javainuse.rabbitmq.routingkey}")
     private String routingKey = "telegram_bot_routing_key";
 
     @Bean
@@ -52,4 +49,5 @@ public class RabbitMQConfig {
 //        rabbitTemplate.setMessageConverter(jsonMessageConverter());
 //        return rabbitTemplate;
 //    }
+
 }
