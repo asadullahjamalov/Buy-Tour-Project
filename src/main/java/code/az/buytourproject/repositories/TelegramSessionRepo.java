@@ -17,4 +17,7 @@ public interface TelegramSessionRepo extends JpaRepository<TelegramSession, Long
     @Transactional
     @Query("update TelegramSession t set t.isActive=false where t.chatId=:chatId ")
     void deactivateTelegramSession(long chatId);
+
+    @Query("select t.chatId from TelegramSession t where t.uuid=:uuid")
+    Long findChatIdByUuid(String uuid);
 }

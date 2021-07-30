@@ -1,15 +1,16 @@
 package code.az.buytourproject.services.interfaces;
 
+import code.az.buytourproject.dtos.OfferQueueDTO;
 import code.az.buytourproject.dtos.RequestQueueDTO;
 import code.az.buytourproject.models.Offer;
-import code.az.buytourproject.models.TelegramSession;
+import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;
+import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.io.IOException;
 
 public interface RabbitMQService {
 
     void send(RequestQueueDTO requestQueueDTO);
 
-    Offer offerListener(Offer offer);
+    void offerListener(OfferQueueDTO offer) throws IOException, TelegramApiException;
 }
