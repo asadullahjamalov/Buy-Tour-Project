@@ -12,7 +12,6 @@ import code.az.buytourproject.models.TelegramSession;
 import code.az.buytourproject.repositories.TelegramSessionRepo;
 import code.az.buytourproject.services.interfaces.MessageService;
 import code.az.buytourproject.services.interfaces.RabbitMQService;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.BotApiMethod;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
@@ -21,7 +20,6 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 
 @Component
@@ -124,7 +122,7 @@ public class TelegramFacade {
                         System.out.println(telegramSession.getQuestion().getKey());
                         if (telegramSession.getQuestion().getKey().equals("Last")) {
                             System.out.println(telegramSession.getQuestion().getKey());
-                            rabbitMQService.send(RequestQueueDTO.builder()
+                            rabbitMQService.sendRequest(RequestQueueDTO.builder()
                                     .jsonAnswers(telegramSession.getQuestion_answer_map().toString())
                                     .uuid(telegramSession.getUuid()).build());
                             telegramSessionRepo.save(telegramSession);

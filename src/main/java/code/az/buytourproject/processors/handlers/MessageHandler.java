@@ -2,12 +2,13 @@ package code.az.buytourproject.processors.handlers;
 
 import code.az.buytourproject.cache.RedisCache;
 import code.az.buytourproject.daos.interfaces.OperationDAO;
-import code.az.buytourproject.daos.interfaces.QuestionDAO;
+import code.az.buytourproject.dtos.StopQueueDTO;
 import code.az.buytourproject.enums.OperationType;
 import code.az.buytourproject.models.TelegramSession;
 import code.az.buytourproject.repositories.TelegramSessionRepo;
 import code.az.buytourproject.services.interfaces.KeyboardService;
 import code.az.buytourproject.services.interfaces.MessageService;
+import code.az.buytourproject.services.interfaces.RabbitMQService;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
@@ -16,21 +17,21 @@ import java.util.Map;
 
 @Component
 public class MessageHandler {
-    private OperationDAO operationDAO;
-    private QuestionDAO questionDAO;
-    private KeyboardService keyboardService;
-    private MessageService messageService;
-    private RedisCache redisCache;
-    private TelegramSessionRepo telegramSessionRepo;
+    private final OperationDAO operationDAO;
+    private final KeyboardService keyboardService;
+    private final MessageService messageService;
+    private final RedisCache redisCache;
+    private final TelegramSessionRepo telegramSessionRepo;
+    private final RabbitMQService rabbitMQService;
 
-    public MessageHandler(OperationDAO operationDAO, QuestionDAO questionDAO,
-                          KeyboardService keyboardService, MessageService messageService, RedisCache redisCache, TelegramSessionRepo telegramSessionRepo) {
+    public MessageHandler(OperationDAO operationDAO, KeyboardService keyboardService, RedisCache redisCache,
+                          MessageService messageService, TelegramSessionRepo telegramSessionRepo, RabbitMQService rabbitMQService) {
         this.operationDAO = operationDAO;
-        this.questionDAO = questionDAO;
         this.keyboardService = keyboardService;
         this.messageService = messageService;
         this.redisCache = redisCache;
         this.telegramSessionRepo = telegramSessionRepo;
+        this.rabbitMQService = rabbitMQService;
     }
 
     public SendMessage handleStartCommand(Update update, TelegramSession telegramSession) {
@@ -42,8 +43,9 @@ public class MessageHandler {
     }
 
     public SendMessage handleStopCommand(Update update, Map<Long, TelegramSession> telegramSessionMap) {
-       TelegramSession telegramSession = telegramSessionMap.get(update.getMessage().getFrom().getId().longValue());
+        TelegramSession telegramSession = telegramSessionMap.get(update.getMessage().getFrom().getId().longValue());
         if (telegramSession.getChatId() == update.getMessage().getFrom().getId().longValue()) {
+            rabbitMQService.sendStopEvent(StopQueueDTO.builder().uuid(telegramSession.getUuid()).build());
             telegramSessionRepo.deactivateTelegramSession(telegramSession.getChatId());
             redisCache.delete(update.getMessage().getChatId());
             telegramSession.setChatId(0l);

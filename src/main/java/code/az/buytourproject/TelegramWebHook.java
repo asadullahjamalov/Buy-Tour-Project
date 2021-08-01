@@ -1,14 +1,17 @@
 package code.az.buytourproject;
 
+import code.az.buytourproject.dtos.AcceptQueueDTO;
+import code.az.buytourproject.models.SentOffer;
 import code.az.buytourproject.processors.TelegramFacade;
+import code.az.buytourproject.repositories.SentOfferRepo;
 import code.az.buytourproject.services.interfaces.RabbitMQService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.telegram.telegrambots.bots.TelegramWebhookBot;
 import org.telegram.telegrambots.meta.api.methods.BotApiMethod;
+import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
 
-import java.io.File;
 
 @Slf4j
 public class TelegramWebHook extends TelegramWebhookBot {
@@ -22,10 +25,27 @@ public class TelegramWebHook extends TelegramWebhookBot {
     @Autowired
     RabbitMQService rabbitMQService;
 
+    @Autowired
+    SentOfferRepo sentOfferRepo;
+
+
     @Override
     public BotApiMethod<?> onWebhookUpdateReceived(Update update) {
 
+        if (update.getMessage().isReply()) {
+            System.out.println(update.getMessage().getReplyToMessage().getMessageId());
+            System.out.println("here");
+            SentOffer sentOffer = sentOfferRepo.findSentOfferByMessageIdAndChatId(
+                    update.getMessage().getReplyToMessage().getMessageId(), update.getMessage().getChatId());
+            rabbitMQService.sendAcceptEvent(AcceptQueueDTO.builder()
+                    .agentId(sentOffer.getAgentId())
+                    .uuid(sentOffer.getUuid())
+                    .info(update.getMessage().getText())
+                    .build());
+            return new SendMessage(update.getMessage().getChatId(), "Əlaqə məlumatlarınızı tur agentə göndərdik." + "\n" +
+                    "We have sent your contact info to tour agent." + "\n" + "Мы отправили вашу контактную информацию туроператору. ");
 
+        }
 
         if (update.getMessage() != null && update.getMessage().hasText()) {
             log.info("New message from User:{}, chatId: {},  with text: {}",
@@ -63,6 +83,4 @@ public class TelegramWebHook extends TelegramWebhookBot {
         this.botToken = botToken;
     }
 
-    public void execute(File file) {
-    }
 }

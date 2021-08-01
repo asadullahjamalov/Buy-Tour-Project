@@ -1,8 +1,12 @@
 package code.az.buytourproject.services;
 
 import code.az.buytourproject.TelegramWebHook;
+import code.az.buytourproject.dtos.AcceptQueueDTO;
 import code.az.buytourproject.dtos.OfferQueueDTO;
 import code.az.buytourproject.dtos.RequestQueueDTO;
+import code.az.buytourproject.dtos.StopQueueDTO;
+import code.az.buytourproject.models.SentOffer;
+import code.az.buytourproject.repositories.SentOfferRepo;
 import code.az.buytourproject.repositories.TelegramSessionRepo;
 import code.az.buytourproject.services.interfaces.RabbitMQService;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
@@ -23,18 +27,32 @@ public class RabbitMQServiceImpl implements RabbitMQService {
     private final RabbitTemplate rabbitTemplate;
     private final TelegramWebHook telegramWebHook;
     private final TelegramSessionRepo telegramSessionRepo;
+    private final SentOfferRepo sentOfferRepo;
 
     public RabbitMQServiceImpl(RabbitTemplate rabbitTemplate, TelegramWebHook telegramWebHook,
-                               TelegramSessionRepo telegramSessionRepo) {
+                               TelegramSessionRepo telegramSessionRepo, SentOfferRepo sentOfferRepo) {
         this.rabbitTemplate = rabbitTemplate;
         this.telegramWebHook = telegramWebHook;
         this.telegramSessionRepo = telegramSessionRepo;
+        this.sentOfferRepo = sentOfferRepo;
     }
 
     @Override
-    public void send(RequestQueueDTO requestQueueDTO) {
+    public void sendRequest(RequestQueueDTO requestQueueDTO) {
         rabbitTemplate.convertAndSend("telegram_bot_exchange",
-                "telegram_bot_routing_key", requestQueueDTO);
+                "request_routing_key", requestQueueDTO);
+    }
+
+    @Override
+    public void sendStopEvent(StopQueueDTO stopQueueDTO) {
+        rabbitTemplate.convertAndSend("telegram_bot_exchange",
+                "stop_routing_key", stopQueueDTO);
+    }
+
+    @Override
+    public void sendAcceptEvent(AcceptQueueDTO acceptQueueDTO) {
+        rabbitTemplate.convertAndSend("telegram_bot_exchange",
+                "accept_routing_key", acceptQueueDTO);
     }
 
     @Override
@@ -48,18 +66,21 @@ public class RabbitMQServiceImpl implements RabbitMQService {
 
 
         System.out.println(telegramSessionRepo.findChatIdByUuid(offerQueueDTO.getUuid()));
-        System.out.println("Image was sent");
+        System.out.println("Image was received");
 
-        telegramWebHook.execute(new SendPhoto().setPhoto(image).setChatId(telegramSessionRepo.findChatIdByUuid(offerQueueDTO.getUuid())));
+        Integer messageId = telegramWebHook.execute(new SendPhoto().setPhoto(image)
+                .setChatId(telegramSessionRepo.findChatIdByUuid(offerQueueDTO.getUuid()))).getMessageId();
 
-//        return sendPhoto;
-
+        sentOfferRepo.save(SentOffer.builder().agentId(offerQueueDTO.getAgentId())
+                .uuid(offerQueueDTO.getUuid())
+                .chatId(telegramSessionRepo.findChatIdByUuid(offerQueueDTO.getUuid()))
+                .messageId(messageId)
+                .build());
     }
 
     public static BufferedImage toBufferedImage(byte[] bytes) throws IOException {
         InputStream is = new ByteArrayInputStream(bytes);
-        BufferedImage bi = ImageIO.read(is);
-        return bi;
+        return ImageIO.read(is);
 
     }
 

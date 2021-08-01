@@ -3,16 +3,13 @@ package code.az.buytourproject.dtos;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
-
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@FieldDefaults(level= AccessLevel.PRIVATE)
 @Builder(toBuilder = true)
+@FieldDefaults(level= AccessLevel.PRIVATE)
 @ToString
-public class OfferQueueDTO {
-    private Long agentId;
+public class StopQueueDTO {
     private String uuid;
-    private byte[] image;
 }
