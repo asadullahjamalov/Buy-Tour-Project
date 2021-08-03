@@ -59,17 +59,12 @@ public class RabbitMQServiceImpl implements RabbitMQService {
     @RabbitListener(queues = "buy_tour_web_queue")
     public void offerListener(OfferQueueDTO offerQueueDTO) throws IOException, TelegramApiException {
 
-        BufferedImage bufferedImage = toBufferedImage(offerQueueDTO.getImage());
-
         File image = new File("image.png");
-        ImageIO.write(bufferedImage, "png", image);
-
-
-        System.out.println(telegramSessionRepo.findChatIdByUuid(offerQueueDTO.getUuid()));
-        System.out.println("Image was received");
+        ImageIO.write(toBufferedImage(offerQueueDTO.getImage()), "png", image);
 
         Integer messageId = telegramWebHook.execute(new SendPhoto().setPhoto(image)
-                .setChatId(telegramSessionRepo.findChatIdByUuid(offerQueueDTO.getUuid()))).getMessageId();
+                .setChatId(telegramSessionRepo.findChatIdByUuid(offerQueueDTO.getUuid())))
+                .getMessageId();
 
         sentOfferRepo.save(SentOffer.builder().agentId(offerQueueDTO.getAgentId())
                 .uuid(offerQueueDTO.getUuid())

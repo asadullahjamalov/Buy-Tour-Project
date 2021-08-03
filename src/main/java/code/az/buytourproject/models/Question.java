@@ -12,10 +12,12 @@ import java.io.Serializable;
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level= AccessLevel.PRIVATE)
+@Builder(toBuilder = true)
 @Entity
 @Table(name = "questions")
 public class Question implements Serializable {
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
     String question_az;
     String question_en;

@@ -42,8 +42,8 @@ public class TelegramWebHook extends TelegramWebhookBot {
                     .uuid(sentOffer.getUuid())
                     .info(update.getMessage().getText())
                     .build());
-            return new SendMessage(update.getMessage().getChatId(), "Əlaqə məlumatlarınızı tur agentə göndərdik." + "\n" +
-                    "We have sent your contact info to tour agent." + "\n" + "Мы отправили вашу контактную информацию туроператору. ");
+            return new SendMessage(update.getMessage().getChatId(), "Tur agent sizinlə əlaqə saxlayacaq." + "\n" +
+                    "The tour agent will contact you." + "\n" + "Тур агент свяжется с вами.");
 
         }
 

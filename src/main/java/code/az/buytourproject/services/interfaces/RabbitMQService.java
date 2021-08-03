@@ -4,8 +4,6 @@ import code.az.buytourproject.dtos.AcceptQueueDTO;
 import code.az.buytourproject.dtos.OfferQueueDTO;
 import code.az.buytourproject.dtos.RequestQueueDTO;
 import code.az.buytourproject.dtos.StopQueueDTO;
-import code.az.buytourproject.models.Offer;
-import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import java.io.IOException;
