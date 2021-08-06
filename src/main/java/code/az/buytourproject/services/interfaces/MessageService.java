@@ -23,4 +23,6 @@ public interface MessageService {
 
     SendMessage sendSurveyFinishedMessage(long chatId, String locale, String finishedSurvey);
 
+    String getCaptionByLocale(String locale);
+
 }

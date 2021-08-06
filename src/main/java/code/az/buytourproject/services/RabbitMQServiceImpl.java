@@ -8,6 +8,7 @@ import code.az.buytourproject.dtos.StopQueueDTO;
 import code.az.buytourproject.models.SentOffer;
 import code.az.buytourproject.repositories.SentOfferRepo;
 import code.az.buytourproject.repositories.TelegramSessionRepo;
+import code.az.buytourproject.services.interfaces.MessageService;
 import code.az.buytourproject.services.interfaces.RabbitMQService;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -28,13 +29,16 @@ public class RabbitMQServiceImpl implements RabbitMQService {
     private final TelegramWebHook telegramWebHook;
     private final TelegramSessionRepo telegramSessionRepo;
     private final SentOfferRepo sentOfferRepo;
+    private final MessageService messageService;
 
     public RabbitMQServiceImpl(RabbitTemplate rabbitTemplate, TelegramWebHook telegramWebHook,
-                               TelegramSessionRepo telegramSessionRepo, SentOfferRepo sentOfferRepo) {
+                               TelegramSessionRepo telegramSessionRepo, SentOfferRepo sentOfferRepo,
+                               MessageService messageService) {
         this.rabbitTemplate = rabbitTemplate;
         this.telegramWebHook = telegramWebHook;
         this.telegramSessionRepo = telegramSessionRepo;
         this.sentOfferRepo = sentOfferRepo;
+        this.messageService = messageService;
     }
 
     @Override
@@ -62,7 +66,12 @@ public class RabbitMQServiceImpl implements RabbitMQService {
         File image = new File("image.png");
         ImageIO.write(toBufferedImage(offerQueueDTO.getImage()), "png", image);
 
+        String locale = telegramSessionRepo.findLocaleByUuid(offerQueueDTO.getUuid());
+
+        String caption = messageService.getCaptionByLocale(locale);
+
         Integer messageId = telegramWebHook.execute(new SendPhoto().setPhoto(image)
+                .setCaption(caption)
                 .setChatId(telegramSessionRepo.findChatIdByUuid(offerQueueDTO.getUuid())))
                 .getMessageId();
 

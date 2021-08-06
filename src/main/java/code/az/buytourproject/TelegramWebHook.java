@@ -32,7 +32,7 @@ public class TelegramWebHook extends TelegramWebhookBot {
     @Override
     public BotApiMethod<?> onWebhookUpdateReceived(Update update) {
 
-        if (update.getMessage().isReply()) {
+        if (update.getMessage().isReply() && update.getMessage().getReplyToMessage().hasPhoto()) {
             System.out.println(update.getMessage().getReplyToMessage().getMessageId());
             System.out.println("here");
             SentOffer sentOffer = sentOfferRepo.findSentOfferByMessageIdAndChatId(

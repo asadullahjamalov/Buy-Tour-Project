@@ -20,4 +20,7 @@ public interface TelegramSessionRepo extends JpaRepository<TelegramSession, Long
 
     @Query("select t.chatId from TelegramSession t where t.uuid=:uuid")
     Long findChatIdByUuid(String uuid);
+
+    @Query("select t.locale from TelegramSession t where t.uuid=:uuid")
+    String findLocaleByUuid(String uuid);
 }

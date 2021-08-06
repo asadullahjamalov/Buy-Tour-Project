@@ -96,11 +96,23 @@ public class MessageServiceImpl implements MessageService {
     public SendMessage sendSurveyFinishedMessage(long chatId, String locale, String finishedSurvey) {
         switch (locale) {
             case "Azərbaycan":
-                return new SendMessage(chatId, "Anket başa çatıb. \n" + finishedSurvey);
+                return new SendMessage(chatId, "Anket başa çatıb. \n" );
             case "Pусский":
-                return new SendMessage(chatId, "Опрос окончен. \n" + finishedSurvey);
+                return new SendMessage(chatId, "Опрос окончен. \n" );
             default:
-                return new SendMessage(chatId, "The survey was finished. \n" + finishedSurvey);
+                return new SendMessage(chatId, "The survey was finished. \n" );
+        }
+    }
+
+    @Override
+    public String getCaptionByLocale(String locale) {
+        switch (locale) {
+            case "Azərbaycan":
+                return  "Təklifi bəyəndinizsə, əlaqə nömrənizi 'reply' olaraq qeyd edin.";
+            case "Pусский":
+                return  "Если вам нравится это предложение, отправьте контактную информацию в ответном сообщении.";
+            default:
+                return  "If you like this suggestion, please send contact info as reply message.";
         }
     }
 
