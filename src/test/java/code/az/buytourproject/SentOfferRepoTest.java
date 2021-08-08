@@ -1,6 +1,7 @@
-package code.az.buytourproject.repositories;
+package code.az.buytourproject;
 
 import code.az.buytourproject.models.SentOffer;
+import code.az.buytourproject.repositories.SentOfferRepo;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

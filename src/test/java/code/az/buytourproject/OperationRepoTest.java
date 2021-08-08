@@ -1,7 +1,9 @@
-package code.az.buytourproject.repositories;
+package code.az.buytourproject;
 
 import code.az.buytourproject.models.Operation;
 import code.az.buytourproject.models.Question;
+import code.az.buytourproject.repositories.OperationRepo;
+import code.az.buytourproject.repositories.QuestionRepo;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,7 +22,7 @@ class OperationRepoTest {
     private OperationRepo underTest;
 
     @Autowired
-    private  QuestionRepo questionRepo;
+    private QuestionRepo questionRepo;
 
     @AfterEach
     void tearDown() {
